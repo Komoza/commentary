@@ -77,7 +77,7 @@ const eventLike = () => {
     });
   };
 
-  const evenEditInput = () => {
+  const eventEditInput = () => {
     document.querySelectorAll(".input-text").forEach((input) => {
       input.addEventListener("keyup", (key) => {
         const objComment = arrComments[input.dataset.index];
@@ -94,6 +94,6 @@ const eventLike = () => {
   export function getEvent() {
     eventLike();
     eventEdit();
-    evenEditInput();
+    eventEditInput();
     eventReply();
   };

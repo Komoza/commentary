@@ -118,9 +118,7 @@ function switchButton() {
 //   arrComments.pop();
 
 //   // Заново накидываем ивенты, они почему-то сбрасываются
-//   eventLike();
-//   eventEdit();
-//   evenEditInput();
+//   getEvent();
 // });
 
 // start
