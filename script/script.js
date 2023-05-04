@@ -25,7 +25,18 @@ const renderApp = () => {
     <div class="add-form-row">
       <button class="add-form-button inactive">Написать</button>
     </div>
-  </div>`;
+  </div>
+  <div class="authorization">
+    <div class="auth-wrap">
+      <p class="auth-status">Вход</p>
+      <input class="auth-name" type="text" placeholder="Введите имя">
+      <input class="auth-login" type="text" placeholder="Введите логин">
+      <input class="auth-pass" type="password" placeholder="Введите пароль">
+      <button class="auth-login-btn inactive">Войти</button>
+      <button class="auth-switch">Зарегистрироваться</button>
+    </div>
+  </div>
+  `;
 };
 
 const getComments = () => {
@@ -73,7 +84,7 @@ const sendComment = () => {
         sendComment();
       }
     });
-}
+};
 
 const switchButton = () => {
   if (inputName.value.trim().length && inputText.value.trim().length) {
@@ -83,8 +94,7 @@ const switchButton = () => {
     buttonAdd.classList.add("inactive");
     buttonAdd.classList.remove("active");
   }
-}
-
+};
 
 // ====== START =====
 renderApp();
@@ -118,6 +128,4 @@ let arrComments = [];
 
 getComments();
 
-
-
-export {arrComments };
+export { arrComments };
