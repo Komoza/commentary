@@ -1,14 +1,21 @@
-import { getDate, arrComments } from "./script.js";
+import { arrComments } from "./script.js";
 
-const comments = document.querySelector(".comments");
+const getFormatDate = date => {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear().toString().slice(-2);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
 
 const renderComment = (comment, index) => {
-  console.log(comment);
-  comments.innerHTML += ` 
+  return ` 
           <li class="comment" data-index="${index}">
               <div class="comment-header">
               <div>${comment.author.name}</div>
-              <div>${getDate(new Date(comment.date))}</div>
+              <div>${getFormatDate(new Date(comment.date))}</div>
               </div>
               <div class="comment-body">
                   ${
@@ -33,11 +40,12 @@ const renderComment = (comment, index) => {
 };
 
 export const renderComments = () => {
-  // перед рендером удаляем все комменты которые были, чтобы они не дублировались
+  const comments = document.querySelector('.comments');
   comments.innerHTML = "";
 
-  arrComments.forEach((comment, index) =>
-    // id не передаю - он поломанный
-    renderComment(comment, index)
-  );
+  arrComments.forEach((comment, index) => {
+    comments.innerHTML += renderComment(comment, index);
+  });
 };
+
+

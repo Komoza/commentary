@@ -1,7 +1,7 @@
 import { arrComments } from "./script.js";
 import { renderComments } from "./renderComment.js";
 
-function delay(interval = 300) {
+const delay = (interval = 300) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve();

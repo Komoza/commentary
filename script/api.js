@@ -7,10 +7,7 @@ const getCommentsApi = () => {
   ).then((response) => response.json());
 };
 
-const postCommentsApi = () => {
-  const inputName = document.querySelector(".add-form-name");
-  const inputText = document.querySelector(".add-form-text");
-  
+const postCommentsApi = (inputName, inputText) => {
   return fetch(
     "https://webdev-hw-api.vercel.app/api/v1/Komoza_Maxim/comments",
     {
@@ -33,7 +30,6 @@ const postCommentsApi = () => {
         const alertText = data.error
           .replace("name", "Имя")
           .replace("text", "Комментарий");
-
         alert(alertText);
       });
       throw Error("400");
