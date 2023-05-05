@@ -81,7 +81,7 @@ const sendComment = () => {
   preloader.classList.add("--ON");
   addFormBox.classList.remove("--ON");
 
-  postCommentsApi(login.name, inputText.value)
+  postCommentsApi(inputText.value, login.token)
     .then((data) => {
       if (data.result === "ok") {
         getComments();
@@ -118,6 +118,8 @@ const switchButtonAuth = () => {
   const authPass = document.querySelector(".auth-pass");
   const btnAuth = document.querySelector(".auth-login-btn");
 
+  document.querySelector('.-error').classList.remove('--ON');
+
   if (authLogin.value.length && authPass.value.length) {
     btnAuth.classList.add("active");
     btnAuth.classList.remove("inactive");
@@ -127,9 +129,37 @@ const switchButtonAuth = () => {
   }
 };
 
+const switchButtonReg = () => {
+  const authName = document.querySelector(".auth-name");
+  const authLogin = document.querySelector(".auth-login");
+  const authPass = document.querySelector(".auth-pass");
+  const btnAuth = document.querySelector(".auth-login-btn");
+
+  document.querySelector('.-error').classList.remove('--ON');
+
+  if (
+    authLogin.value.length &&
+    authPass.value.length &&
+    authName.value.length
+  ) {
+    btnAuth.classList.add("active");
+    btnAuth.classList.remove("inactive");
+  } else {
+    btnAuth.classList.add("inactive");
+    btnAuth.classList.remove("active");
+  }
+};
+
 const applicationLogin = () => {
-  login.login = document.querySelector(".auth-login").value;
-  login.password = document.querySelector(".auth-pass").value;
+  const authLogin = document.querySelector(".auth-login").value;
+  const authPass = document.querySelector(".auth-pass").value;
+
+  // Валидация
+  if (!authLogin.length || !authPass.length) return;
+
+  login.login = authLogin;
+  login.password = authPass;
+
   loginApi(login)
     .then((data) => {
       login.name = data.user.name;
@@ -140,8 +170,9 @@ const applicationLogin = () => {
     })
     .catch((error) => {
       if (error.message === "400") {
-        console.log('неправильный логин или пароль');
-        // TODO: сообщить пользователю что он ввел неправильный логин или пароль
+        const error = document.querySelector('.-error');
+        error.classList.add('--ON');
+        error.innerHTML = "Неправильный логин или пароль";
       } else {
         alert("Упс, кажется что-то пошло не так...");
       }
@@ -149,26 +180,37 @@ const applicationLogin = () => {
 };
 
 const applicationRegister = () => {
-  login.name = document.querySelector('.auth-name').value;
-  login.login = document.querySelector(".auth-login").value;
-  login.password = document.querySelector(".auth-pass").value;
-  registerApi(login).then(data => {
-    login.login = data.user.login;
-    login.password = data.user.password;
-    login.name = data.user.name;
-    login.token = data.user.token;
-    setDisplay("none");
-    setAuthorized(true);
-    localStorage.setItem("login", JSON.stringify(login));
-  }).catch((error) => {
-    if (error.message === '400') {
-      console.log('такой пользователь уже есть в базе');
-       // TODO: сообщить пользователю что такой ник уже есть в базе
-    } else {
-      alert("Упс, кажется что-то пошло не так...");
-    }
-  })
-}
+  const authLogin = document.querySelector(".auth-login").value;
+  const authPass = document.querySelector(".auth-pass").value;
+  const authName = document.querySelector(".auth-name").value;
+
+  // Валидация
+  if (!authLogin.length || !authPass.length || !authName.length) return;
+
+  login.name = authName;
+  login.login = authLogin;
+  login.password = authPass;
+
+  registerApi(login)
+    .then((data) => {
+      login.login = data.user.login;
+      login.password = data.user.password;
+      login.name = data.user.name;
+      login.token = data.user.token;
+      setDisplay("none");
+      setAuthorized(true);
+      localStorage.setItem("login", JSON.stringify(login));
+    })
+    .catch((error) => {
+      if (error.message === "400") {
+        const error = document.querySelector('.-error');
+        error.classList.add('--ON');
+        error.innerHTML = "Такой пользователь уже есть в базе";
+      } else {
+        alert("Упс, кажется что-то пошло не так...");
+      }
+    });
+};
 
 const logout = () => {
   login.login = "";
@@ -260,6 +302,10 @@ const getElementAndEvent = () => {
             applicationRegister();
           }
         });
+        // Смена цвета кнопки регистрации
+        authName.addEventListener("input", switchButtonReg);
+        authLogin.addEventListener("input", switchButtonReg);
+        authPass.addEventListener("input", switchButtonReg);
       }
     }
   }
@@ -297,13 +343,3 @@ getComments();
 
 export { arrComments, display, isAuthorized };
 
-
-
-/*
- TODO 
-  POST
-  Likes
-  Валидация при регистрации
-  Сообщить пользователю о неверном логине и пароле
-  Сообщить пользователю о занятом логине
- */ 

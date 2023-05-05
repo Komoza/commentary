@@ -315,3 +315,10 @@ body {
   color: white;
   cursor: pointer;
 }
+
+.-error{
+  margin-top: 10px;
+  align-self: start;
+  color: red;
+  display: none;
+}

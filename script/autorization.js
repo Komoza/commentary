@@ -35,7 +35,8 @@ const authComponent = (login) => {
             }
             <input class="auth-login" type="text" placeholder="Введите логин">
             <input class="auth-pass" type="password" placeholder="Введите пароль">
-            <button class="auth-login-btn ${display === 'registration' ? '' : 'inactive'}">${
+            <div class="-error">Ошибка</div>
+            <button class="auth-login-btn inactive">${
               display == "login" ? "Войти" : "Зарегистрироваться"
             }</button>
             <button class="auth-switch">${
