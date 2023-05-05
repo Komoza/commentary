@@ -1,31 +1,29 @@
 import { getCommentsApi, postCommentsApi } from "./api.js";
 import { renderComments } from "./renderComment.js";
 import { getEvent } from "./events.js";
-import { authComponent } from "./autorization.js";
+import { authComponent, registerApi, loginApi } from "./autorization.js";
 
 const container = document.querySelector(".container");
+const login = {
+  login: "",
+  password: "",
+  token: "",
+  name: "",
+};
+
 let display = "none";
 let isAuthorized = false;
 
 // ===== FUNCTIONS =====
 const renderApp = () => {
   container.innerHTML = `
-  ${
-    display === "none"
-      ? `<ul class="comments">
-  </ul>
-  <img class="preloader" src="./image/preloader.gif" alt="preloader">`
-      : ""
-  }
+  <img class="preloader" src="./image/preloader.gif" alt="preloader">
+  ${display === "none" ? `<ul class="comments"></ul>` : ""}
   ${
     isAuthorized
       ? `
       <div class="add-form">
-        <input
-          type="text"
-          class="add-form-name"
-          placeholder="Введите ваше имя"
-        />
+        <div class="add-form-name">${login.name}</div>
         <textarea
           type="textarea"
           class="add-form-text"
@@ -44,7 +42,7 @@ const renderApp = () => {
       </div>
     `
   }
-  ${authComponent()}
+  ${authComponent(login)}
   `;
 };
 
@@ -75,16 +73,15 @@ const getComments = () => {
 
 const sendComment = () => {
   // проверка на пустые поля
-  if (!inputName.value.trim().length || !inputText.value.trim().length) return;
+  if (!inputText.value.trim().length) return;
 
   preloader.classList.add("--ON");
   addFormBox.classList.remove("--ON");
 
-  postCommentsApi(inputName, inputText)
+  postCommentsApi(login.name, inputText.value)
     .then((data) => {
       if (data.result === "ok") {
         getComments();
-        inputName.value = "";
         inputText.value = "";
         switchButton();
       }
@@ -104,7 +101,7 @@ const sendComment = () => {
 };
 
 const switchButton = () => {
-  if (inputName.value.trim().length && inputText.value.trim().length) {
+  if (inputText.value.trim().length) {
     buttonAdd.classList.add("active");
     buttonAdd.classList.remove("inactive");
   } else {
@@ -115,18 +112,11 @@ const switchButton = () => {
 
 const getElementAndEvent = () => {
   if (isAuthorized) {
-    inputName = document.querySelector(".add-form-name");
     inputText = document.querySelector(".add-form-text");
     buttonAdd = document.querySelector(".add-form-button");
     addFormBox = document.querySelector(".add-form");
 
     buttonAdd.addEventListener("click", sendComment);
-    inputName.addEventListener("keyup", (key) => {
-      if (key.code === "Enter") {
-        key.preventDefault();
-        inputText.focus();
-      }
-    });
     inputText.addEventListener("keydown", (key) => {
       if (key.code === "Enter") {
         // чтобы не срабатывал enter
@@ -135,9 +125,13 @@ const getElementAndEvent = () => {
       }
     });
     inputText.addEventListener("input", switchButton);
-    inputName.addEventListener("input", switchButton);
 
-    document.querySelector('.logout').addEventListener("click", () => setAuthorized(false))
+    document.querySelector(".logout").addEventListener("click", () => {
+      setAuthorized(false);
+      login.login = "";
+      login.password = "";
+      login.token = "";
+    });
   } else {
     tipsWrap = document.querySelector(".tips-wrap");
 
@@ -157,6 +151,28 @@ const getElementAndEvent = () => {
         .addEventListener("click", () =>
           setDisplay(`${display === "login" ? "registration" : "login"}`)
         );
+      if (display === "login") {
+        document
+          .querySelector(".auth-login-btn")
+          .addEventListener("click", () => {
+            login.login = document.querySelector(".auth-login").value;
+            login.password = document.querySelector(".auth-pass").value;
+            loginApi(login)
+              .then((data) => {
+                login.name = data.user.name;
+                login.token = data.user.token;
+                setDisplay("none");
+                setAuthorized("true");
+              })
+              .catch((error) => {
+                if (error.message === "400") {
+                  // TODO: код для сообщения что пользователь ввел неправильный логин или пароль
+                } else {
+                  alert("Упс, кажется что-то пошло не так...");
+                }
+              });
+          });
+      }
     }
   }
 };
@@ -172,20 +188,18 @@ const setAuthorized = (status) => {
   renderApp();
   getElementAndEvent();
   getComments();
-}
+};
 
 // ====== START =====
 renderApp();
+const preloader = document.querySelector(".preloader");
 
 // получение статичных элементов и эвентов для них
 let addFormBox = null;
 let tipsWrap = null;
-let inputName = null;
 let inputText = null;
 let buttonAdd = null;
 getElementAndEvent();
-
-const preloader = document.querySelector(".preloader");
 
 // масив комментариев, тут хранятся все комментарии
 let arrComments = [];

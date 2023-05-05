@@ -1,19 +1,15 @@
 import { display, isAuthorized } from "./script.js";
 
-const login = {
-  login: "maxim",
-  password: "",
-  token: "bgc0b8awbwas6g5g5k5o5s5w606g37w3cc3bo3b83k39s3co3c83c03ck",
-};
+const url = "https://webdev-hw-api.vercel.app/api/user";
 
-const authComponent = () => {
+const authComponent = (login) => {
   return `
     ${`
     <div class="auth-btn-wrap">
     ${
       isAuthorized
         ? `
-            <div>Вы вошли как ${login.login},</div> 
+            <div>Вы вошли как ${login.name},</div> 
             <button class="logout">выйти</button>
         `
         : `   
@@ -54,6 +50,39 @@ const authComponent = () => {
     `;
 };
 
-// document.querySelector('.auth-btn-login').addEventListener("click", () => display = 'login');
+const loginApi = (login) => {
+  return fetch(url + "/login", {
+    method: "POST",
+    body: JSON.stringify({
+      login: login.login,
+      password: login.password,
+    }),
+  }).then((response) => {
+    if (response.status === 201) {
+      return response.json();
+    } else if (response.status === 400) {
+      throw Error("400");
+    }
+  });
+};
 
-export {login, authComponent };
+const registerApi = () => {
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify({
+      login: "",
+      name: "",
+      password: "",
+    }),
+  }).then((response) => {
+    if (response.status === 201) {
+      return response.json();
+    }
+    if (response.status === 400) {
+      throw Error("Такой пользователь уже существует");
+    }
+    throw Error("Упс, что-то пошло не так");
+  });
+};
+
+export { authComponent, registerApi, loginApi };

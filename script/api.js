@@ -1,11 +1,9 @@
-import { login } from "./autorization.js";
-
 const url = "https://webdev-hw-api.vercel.app/api/v2/Maxim_Komoza";
 
 const getCommentsApi = () => {
   return fetch(url + '/comments', {
     method: "GET",
-    Authorization: login.token,
+    Authorization: '',
   }).then((response) => response.json());
 };
 
@@ -13,8 +11,8 @@ const postCommentsApi = (inputName, inputText) => {
   return fetch(url + '/comments', {
     method: "POST",
     body: JSON.stringify({
-      name: inputName.value.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
-      text: inputText.value
+      name: inputName.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
+      text: inputText
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll("[BEGIN_QUOTE]", "<div class='quote'>")
