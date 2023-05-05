@@ -286,7 +286,10 @@ body {
   cursor: pointer;
   font-size: 16px;
 }
-.auth-btn:hover {
+.auth-btn:hover,
+.tips-auth:hover,
+.logout:hover,
+.auth-switch:hover {
   color: #bcec30;
 }
 
@@ -298,9 +301,6 @@ body {
 .tips-auth {
   text-decoration: underline;
   cursor: pointer;
-}
-.tips-auth:hover, .logout:hover {
-  color: #bcec30;
 }
 
 .authorization {
@@ -316,7 +316,7 @@ body {
   cursor: pointer;
 }
 
-.-error{
+.-error {
   margin-top: 10px;
   align-self: start;
   color: red;
