@@ -154,8 +154,8 @@ body {
 }
 
 .inactive {
-  background-color: #b3b4b0;
-  cursor: auto;
+  background-color: #b3b4b0 !important;
+  cursor: auto !important;
 }
 
 .edit-button {
@@ -254,6 +254,7 @@ body {
   padding: 10px 20px;
   border: none;
   border-radius: 18px;
+  background: #bcec30;
   cursor: pointer;
 }
 

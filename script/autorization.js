@@ -35,7 +35,7 @@ const authComponent = (login) => {
             }
             <input class="auth-login" type="text" placeholder="Введите логин">
             <input class="auth-pass" type="password" placeholder="Введите пароль">
-            <button class="auth-login-btn inactive">${
+            <button class="auth-login-btn ${display === 'registration' ? '' : 'inactive'}">${
               display == "login" ? "Войти" : "Зарегистрироваться"
             }</button>
             <button class="auth-switch">${
@@ -66,22 +66,22 @@ const loginApi = (login) => {
   });
 };
 
-const registerApi = () => {
-  fetch(url, {
+const registerApi = (login) => {
+  return fetch(url, {
     method: "POST",
     body: JSON.stringify({
-      login: "",
-      name: "",
-      password: "",
+      login: login.login,
+      name: login.name,
+      password: login.password,
     }),
   }).then((response) => {
     if (response.status === 201) {
       return response.json();
     }
     if (response.status === 400) {
-      throw Error("Такой пользователь уже существует");
+      throw Error("400");
     }
-    throw Error("Упс, что-то пошло не так");
+    throw Error();
   });
 };
 

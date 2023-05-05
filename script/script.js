@@ -56,7 +56,7 @@ const getComments = () => {
   } else {
     tipsWrap.classList.remove("--ON");
   }
-  getCommentsApi()
+  getCommentsApi(login)
     .then((data) => {
       arrComments = [...data.comments];
       renderComments();
@@ -113,6 +113,72 @@ const switchButton = () => {
   }
 };
 
+const switchButtonAuth = () => {
+  const authLogin = document.querySelector(".auth-login");
+  const authPass = document.querySelector(".auth-pass");
+  const btnAuth = document.querySelector(".auth-login-btn");
+
+  if (authLogin.value.length && authPass.value.length) {
+    btnAuth.classList.add("active");
+    btnAuth.classList.remove("inactive");
+  } else {
+    btnAuth.classList.add("inactive");
+    btnAuth.classList.remove("active");
+  }
+};
+
+const applicationLogin = () => {
+  login.login = document.querySelector(".auth-login").value;
+  login.password = document.querySelector(".auth-pass").value;
+  loginApi(login)
+    .then((data) => {
+      login.name = data.user.name;
+      login.token = data.user.token;
+      setDisplay("none");
+      setAuthorized(true);
+      localStorage.setItem("login", JSON.stringify(login));
+    })
+    .catch((error) => {
+      if (error.message === "400") {
+        console.log('неправильный логин или пароль');
+        // TODO: сообщить пользователю что он ввел неправильный логин или пароль
+      } else {
+        alert("Упс, кажется что-то пошло не так...");
+      }
+    });
+};
+
+const applicationRegister = () => {
+  login.name = document.querySelector('.auth-name').value;
+  login.login = document.querySelector(".auth-login").value;
+  login.password = document.querySelector(".auth-pass").value;
+  registerApi(login).then(data => {
+    login.login = data.user.login;
+    login.password = data.user.password;
+    login.name = data.user.name;
+    login.token = data.user.token;
+    setDisplay("none");
+    setAuthorized(true);
+    localStorage.setItem("login", JSON.stringify(login));
+  }).catch((error) => {
+    if (error.message === '400') {
+      console.log('такой пользователь уже есть в базе');
+       // TODO: сообщить пользователю что такой ник уже есть в базе
+    } else {
+      alert("Упс, кажется что-то пошло не так...");
+    }
+  })
+}
+
+const logout = () => {
+  login.login = "";
+  login.password = "";
+  login.token = "";
+  login.name = "";
+  localStorage.setItem("login", JSON.stringify(login));
+  setAuthorized(false);
+};
+
 const getElementAndEvent = () => {
   if (isAuthorized) {
     inputText = document.querySelector(".add-form-text");
@@ -130,12 +196,7 @@ const getElementAndEvent = () => {
     inputText.addEventListener("input", switchButton);
 
     document.querySelector(".logout").addEventListener("click", () => {
-      setAuthorized(false);
-      login.login = "";
-      login.password = "";
-      login.token = "";
-      login.name = "";
-      localStorage.setItem("login", JSON.stringify(login));
+      logout();
     });
   } else {
     tipsWrap = document.querySelector(".tips-wrap");
@@ -156,28 +217,49 @@ const getElementAndEvent = () => {
         .addEventListener("click", () =>
           setDisplay(`${display === "login" ? "registration" : "login"}`)
         );
+      const authLogin = document.querySelector(".auth-login");
+      const authPass = document.querySelector(".auth-pass");
+      const authLoginBtn = document.querySelector(".auth-login-btn");
+      authLogin.addEventListener("keydown", (key) => {
+        if (key.code === "Enter") {
+          key.preventDefault();
+          authPass.focus();
+        }
+      });
       if (display === "login") {
-        document
-          .querySelector(".auth-login-btn")
-          .addEventListener("click", () => {
-            login.login = document.querySelector(".auth-login").value;
-            login.password = document.querySelector(".auth-pass").value;
-            loginApi(login)
-              .then((data) => {
-                login.name = data.user.name;
-                login.token = data.user.token;
-                setDisplay("none");
-                setAuthorized(true);
-                localStorage.setItem("login", JSON.stringify(login));
-              })
-              .catch((error) => {
-                if (error.message === "400") {
-                  // TODO: код для сообщения что пользователь ввел неправильный логин или пароль
-                } else {
-                  alert("Упс, кажется что-то пошло не так...");
-                }
-              });
-          });
+        authLoginBtn.addEventListener("click", () => {
+          applicationLogin();
+        });
+
+        authPass.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            applicationLogin();
+          }
+        });
+
+        // Смена цвета кнопки входа
+        authLogin.addEventListener("input", switchButtonAuth);
+        authPass.addEventListener("input", switchButtonAuth);
+      }
+      if (display === "registration") {
+        const authName = document.querySelector(".auth-name");
+        authName.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            authLogin.focus();
+          }
+        });
+        authLoginBtn.addEventListener("click", () => {
+          applicationRegister();
+        });
+
+        authPass.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            applicationRegister();
+          }
+        });
       }
     }
   }

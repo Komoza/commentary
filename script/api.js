@@ -1,9 +1,11 @@
 const url = "https://webdev-hw-api.vercel.app/api/v2/Maxim_Komoza";
 
-const getCommentsApi = () => {
+const getCommentsApi = (login) => {
   return fetch(url + '/comments', {
     method: "GET",
-    Authorization: '',
+    headers: {
+      Authorization: `Bearer ${login.token}`
+    }
   }).then((response) => response.json());
 };
 
