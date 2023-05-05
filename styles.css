@@ -195,7 +195,7 @@ body {
 }
 
 .--ON {
-  display: flex;
+  display: flex !important;
 }
 
 .-loading-like {
@@ -269,6 +269,7 @@ body {
   top: 10px;
   right: 10px;
   display: flex;
+  align-items: center;
   gap: 5px;
 }
 
@@ -278,6 +279,7 @@ body {
   color: white;
   font-family: Helvetica;
   cursor: pointer;
+  font-size: 16px;
 }
 .auth-btn:hover {
   color: #bcec30;
@@ -292,6 +294,19 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
-.tips-auth:hover {
+.tips-auth:hover, .logout:hover {
   color: #bcec30;
+}
+
+.authorization {
+  display: flex;
+}
+.logout {
+  font-size: 16px;
+  border: none;
+  background: none;
+  font-family: Helvetica;
+  text-decoration: underline;
+  color: white;
+  cursor: pointer;
 }

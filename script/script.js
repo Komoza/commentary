@@ -1,63 +1,71 @@
 import { getCommentsApi, postCommentsApi } from "./api.js";
 import { renderComments } from "./renderComment.js";
 import { getEvent } from "./events.js";
+import { authComponent } from "./autorization.js";
 
 const container = document.querySelector(".container");
+let display = "none";
+let isAuthorized = false;
 
 // ===== FUNCTIONS =====
 const renderApp = () => {
   container.innerHTML = `
-  <div class="auth-btn-wrap">
-    <button class="auth-btn">Вход</button>
-    <button class="auth-btn">Регистрация</button>
-  </div> 
-
-  <ul class="comments">
+  ${
+    display === "none"
+      ? `<ul class="comments">
   </ul>
-  <img class="preloader" src="./image/preloader.gif" alt="preloader">
-  <div class="add-form">
-    <input
-      type="text"
-      class="add-form-name"
-      placeholder="Введите ваше имя"
-    />
-    <textarea
-      type="textarea"
-      class="add-form-text"
-      placeholder="Введите ваш комментарий"
-      rows="4"
-    ></textarea>
-    <div class="add-form-row">
-      <button class="add-form-button inactive">Написать</button>
-    </div>
-  </div>
-  <div class="tips-wrap">
-    <div>Чтобы добавить комментарий,</div>
-    <buttun class="tips-auth">авторизуйтесь</button>
-  </div>
-  <div class="authorization">
-    <div class="auth-wrap">
-      <p class="auth-status">Вход</p>
-      <input class="auth-name" type="text" placeholder="Введите имя">
-      <input class="auth-login" type="text" placeholder="Введите логин">
-      <input class="auth-pass" type="password" placeholder="Введите пароль">
-      <button class="auth-login-btn inactive">Войти</button>
-      <button class="auth-switch">Зарегистрироваться</button>
-    </div>
-  </div>
+  <img class="preloader" src="./image/preloader.gif" alt="preloader">`
+      : ""
+  }
+  ${
+    isAuthorized
+      ? `
+      <div class="add-form">
+        <input
+          type="text"
+          class="add-form-name"
+          placeholder="Введите ваше имя"
+        />
+        <textarea
+          type="textarea"
+          class="add-form-text"
+          placeholder="Введите ваш комментарий"
+          rows="4"
+        ></textarea>
+        <div class="add-form-row">
+          <button class="add-form-button inactive">Написать</button>
+        </div>
+      </div>
+    `
+      : `  
+      <div class="tips-wrap">
+        <div>Чтобы добавить комментарий,</div>
+        <buttun class="tips-auth">авторизуйтесь</button>
+      </div>
+    `
+  }
+  ${authComponent()}
   `;
 };
 
 const getComments = () => {
   preloader.classList.add("--ON");
-  addFormBox.classList.remove("--ON");
+  if (isAuthorized) {
+    addFormBox.classList.remove("--ON");
+  } else {
+    tipsWrap.classList.remove("--ON");
+  }
   getCommentsApi()
     .then((data) => {
       arrComments = [...data.comments];
       renderComments();
-      getEvent();
+      isAuthorized && getEvent();
       preloader.classList.remove("--ON");
-      addFormBox.classList.add("--ON");
+      if (isAuthorized) {
+        addFormBox.classList.add("--ON");
+      } else {
+        tipsWrap.classList.add("--ON");
+      }
     })
     .catch(() => {
       alert("Упс, кажется что-то пошло не так...");
@@ -105,36 +113,83 @@ const switchButton = () => {
   }
 };
 
+const getElementAndEvent = () => {
+  if (isAuthorized) {
+    inputName = document.querySelector(".add-form-name");
+    inputText = document.querySelector(".add-form-text");
+    buttonAdd = document.querySelector(".add-form-button");
+    addFormBox = document.querySelector(".add-form");
+
+    buttonAdd.addEventListener("click", sendComment);
+    inputName.addEventListener("keyup", (key) => {
+      if (key.code === "Enter") {
+        key.preventDefault();
+        inputText.focus();
+      }
+    });
+    inputText.addEventListener("keydown", (key) => {
+      if (key.code === "Enter") {
+        // чтобы не срабатывал enter
+        key.preventDefault();
+        sendComment();
+      }
+    });
+    inputText.addEventListener("input", switchButton);
+    inputName.addEventListener("input", switchButton);
+
+    document.querySelector('.logout').addEventListener("click", () => setAuthorized(false))
+  } else {
+    tipsWrap = document.querySelector(".tips-wrap");
+
+    document
+      .querySelector(".auth-btn-login")
+      .addEventListener("click", () => setDisplay("login"));
+    document
+      .querySelector(".auth-btn-register")
+      .addEventListener("click", () => setDisplay("registration"));
+    document
+      .querySelector(".tips-auth")
+      .addEventListener("click", () => setDisplay("login"));
+
+    if (display !== "none") {
+      document
+        .querySelector(".auth-switch")
+        .addEventListener("click", () =>
+          setDisplay(`${display === "login" ? "registration" : "login"}`)
+        );
+    }
+  }
+};
+
+const setDisplay = (status) => {
+  display = status;
+  renderApp();
+  getElementAndEvent();
+};
+
+const setAuthorized = (status) => {
+  isAuthorized = status;
+  renderApp();
+  getElementAndEvent();
+  getComments();
+}
+
 // ====== START =====
 renderApp();
 
 // получение статичных элементов и эвентов для них
-const inputName = document.querySelector(".add-form-name");
-const inputText = document.querySelector(".add-form-text");
-const buttonAdd = document.querySelector(".add-form-button");
-const addFormBox = document.querySelector(".add-form");
-const preloader = document.querySelector(".preloader");
+let addFormBox = null;
+let tipsWrap = null;
+let inputName = null;
+let inputText = null;
+let buttonAdd = null;
+getElementAndEvent();
 
-buttonAdd.addEventListener("click", sendComment);
-inputName.addEventListener("keyup", (key) => {
-  if (key.code === "Enter") {
-    key.preventDefault();
-    inputText.focus();
-  }
-});
-inputText.addEventListener("keydown", (key) => {
-  if (key.code === "Enter") {
-    // чтобы не срабатывал enter
-    key.preventDefault();
-    sendComment();
-  }
-});
-inputText.addEventListener("input", switchButton);
-inputName.addEventListener("input", switchButton);
+const preloader = document.querySelector(".preloader");
 
 // масив комментариев, тут хранятся все комментарии
 let arrComments = [];
 
 getComments();
 
-export { arrComments };
+export { arrComments, display, isAuthorized };
