@@ -4,15 +4,18 @@ import { getEvent } from "./events.js";
 import { authComponent, registerApi, loginApi } from "./autorization.js";
 
 const container = document.querySelector(".container");
-const login = {
-  login: "",
-  password: "",
-  token: "",
-  name: "",
-};
+const login = !localStorage.getItem("login")
+  ? {
+      login: "",
+      password: "",
+      token: "",
+      name: "",
+    }
+  : JSON.parse(localStorage.getItem("login"));
 
 let display = "none";
-let isAuthorized = false;
+
+let isAuthorized = Boolean(localStorage.getItem("isAuthorized") === "true");
 
 // ===== FUNCTIONS =====
 const renderApp = () => {
@@ -131,6 +134,8 @@ const getElementAndEvent = () => {
       login.login = "";
       login.password = "";
       login.token = "";
+      login.name = "";
+      localStorage.setItem("login", JSON.stringify(login));
     });
   } else {
     tipsWrap = document.querySelector(".tips-wrap");
@@ -162,7 +167,8 @@ const getElementAndEvent = () => {
                 login.name = data.user.name;
                 login.token = data.user.token;
                 setDisplay("none");
-                setAuthorized("true");
+                setAuthorized(true);
+                localStorage.setItem("login", JSON.stringify(login));
               })
               .catch((error) => {
                 if (error.message === "400") {
@@ -185,6 +191,7 @@ const setDisplay = (status) => {
 
 const setAuthorized = (status) => {
   isAuthorized = status;
+  localStorage.setItem("isAuthorized", status.toString());
   renderApp();
   getElementAndEvent();
   getComments();
