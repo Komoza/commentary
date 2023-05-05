@@ -1,16 +1,16 @@
 const url = "https://webdev-hw-api.vercel.app/api/v2/Maxim_Komoza";
 
 const getCommentsApi = (login) => {
-  return fetch(url + '/comments', {
+  return fetch(url + "/comments", {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${login.token}`
-    }
+      Authorization: `Bearer ${login.token}`,
+    },
   }).then((response) => response.json());
 };
 
 const postCommentsApi = (inputName, inputText) => {
-  return fetch(url + '/comments', {
+  return fetch(url + "/comments", {
     method: "POST",
     body: JSON.stringify({
       name: inputName.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
@@ -42,4 +42,18 @@ const postCommentsApi = (inputName, inputText) => {
   });
 };
 
-export { getCommentsApi, postCommentsApi };
+const postLikeApi = (id, token) => {
+  return fetch(`${url}/comments/${id}/toggle-like`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }).then((response) => {
+    if (response.status === 200) {
+      return response.json();
+    } else {
+      throw Error();
+    }
+  });
+};
+export { getCommentsApi, postCommentsApi, postLikeApi };

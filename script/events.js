@@ -1,5 +1,6 @@
 import { arrComments } from "./script.js";
 import { renderComments } from "./renderComment.js";
+import { postLikeApi } from "./api.js";
 
 const delay = (interval = 300) => {
   return new Promise((resolve) => {
@@ -9,7 +10,7 @@ const delay = (interval = 300) => {
   });
 };
 
-const eventLike = (comments) => {
+const eventLike = (comments, token) => {
   comments.forEach((comment) => {
     const button = comment.querySelector(".like-button");
     button.addEventListener("click", (event) => {
@@ -17,17 +18,18 @@ const eventLike = (comments) => {
       arrComments.forEach((itemComment) => {
         if (itemComment.id == comment.dataset.id) {
           button.classList.add("-loading-like");
-          delay(2000).then(() => {
-            if (itemComment.isLiked) {
-              itemComment.likes -= 1;
-              itemComment.isLiked = false;
-            } else {
-              itemComment.likes += 1;
-              itemComment.isLiked = true;
-            }
-            renderComments();
-            getEvent();
-          });
+          postLikeApi(itemComment.id, token)
+            .then((data) => {
+              delay(2000).then(() => {
+                itemComment.likes = data.result.likes;
+                itemComment.isLiked = data.result.isLiked;
+                renderComments();
+                getEvent();
+              });
+            })
+            .catch(() => {
+              alert("Упс, кажется что-то пошло не так...");
+            });
         }
       });
     });
@@ -99,7 +101,15 @@ const eventEditInput = () => {
 export function getEvent() {
   const comments = document.querySelectorAll(".comment");
   const inputText = document.querySelector(".add-form-text");
+  const login = !localStorage.getItem("login")
+    ? {
+        login: "",
+        password: "",
+        token: "",
+        name: "",
+      }
+    : JSON.parse(localStorage.getItem("login"));
 
-  eventLike(comments);
+  eventLike(comments, login.token);
   eventReply(comments, inputText);
 }

@@ -296,3 +296,14 @@ let arrComments = [];
 getComments();
 
 export { arrComments, display, isAuthorized };
+
+
+
+/*
+ TODO 
+  POST
+  Likes
+  Валидация при регистрации
+  Сообщить пользователю о неверном логине и пароле
+  Сообщить пользователю о занятом логине
+ */ 
