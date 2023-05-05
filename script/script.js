@@ -6,7 +6,12 @@ const container = document.querySelector(".container");
 
 // ===== FUNCTIONS =====
 const renderApp = () => {
-  container.innerHTML = ` 
+  container.innerHTML = `
+  <div class="auth-btn-wrap">
+    <button class="auth-btn">Вход</button>
+    <button class="auth-btn">Регистрация</button>
+  </div> 
+
   <ul class="comments">
   </ul>
   <img class="preloader" src="./image/preloader.gif" alt="preloader">
@@ -25,6 +30,10 @@ const renderApp = () => {
     <div class="add-form-row">
       <button class="add-form-button inactive">Написать</button>
     </div>
+  </div>
+  <div class="tips-wrap">
+    <div>Чтобы добавить комментарий,</div>
+    <buttun class="tips-auth">авторизуйтесь</button>
   </div>
   <div class="authorization">
     <div class="auth-wrap">
