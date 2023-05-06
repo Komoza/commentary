@@ -1,31 +1,31 @@
-import { getDate, arrComments } from "./script.js";
+import { arrComments } from "./script.js";
 
-const comments = document.querySelector(".comments");
+const getFormatDate = (date) => {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear().toString().slice(-2);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
 
-const renderComment = (comment, index) => {
-  console.log(comment);
-  comments.innerHTML += ` 
-          <li class="comment" data-index="${index}">
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
+const renderComment = (comment) => {
+  return ` 
+          <li class="comment" data-id="${comment.id}">
               <div class="comment-header">
-              <div>${comment.author.name}</div>
-              <div>${getDate(new Date(comment.date))}</div>
+                <div>${comment.author.name}</div>
+                <div>${getFormatDate(new Date(comment.date))}</div>
               </div>
               <div class="comment-body">
-                  ${
-                    comment.isEdit
-                      ? `<textArea data-index="${index}" class="input-text">${comment.text}</textArea>`
-                      : `<div class="comment-text">${comment.text}</div>`
-                  }
-                  <button data-index="${index}" class="edit-button">${
-    comment.isEdit ? "Сохранить" : "Редактировать"
-  }</button>
-              </div>
+              <div class="comment-text">${comment.text}</div>
+              
               <div class="comment-footer">
               <div class="likes">
                   <span class="likes-counter">${comment.likes}</span>
-                  <button data-index="${index}" class="like-button ${
-    comment.isLiked ? "-active-like" : ""
-  }"></button>
+                  <button" class="like-button ${
+                    comment.isLiked ? "-active-like" : ""
+                  }"></button>
               </div>
               </div>
           </li>
@@ -33,11 +33,24 @@ const renderComment = (comment, index) => {
 };
 
 export const renderComments = () => {
-  // перед рендером удаляем все комменты которые были, чтобы они не дублировались
+  const comments = document.querySelector(".comments");
   comments.innerHTML = "";
-
-  arrComments.forEach((comment, index) =>
-    // id не передаю - он поломанный
-    renderComment(comment, index)
-  );
+  arrComments.forEach((comment) => {
+    comments.innerHTML += renderComment(comment);
+  });
 };
+
+/*
+Тело для редактирование (нет API)
+
+<div class="comment-body">
+  ${
+    comment.isEdit
+      ? `<textArea class="input-text">${comment.text}</textArea>`
+      : `<div class="comment-text">${comment.text}</div>`
+  }
+  <button class="edit-button">
+    ${comment.isEdit ? "Сохранить" : "Редактировать"}
+  </button>
+</div>
+*/

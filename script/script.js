@@ -1,44 +1,72 @@
 import { getCommentsApi, postCommentsApi } from "./api.js";
 import { renderComments } from "./renderComment.js";
 import { getEvent } from "./events.js";
+import { authComponent, registerApi, loginApi } from "./autorization.js";
 
-const inputName = document.querySelector(".add-form-name");
-const inputText = document.querySelector(".add-form-text");
-const buttonAdd = document.querySelector(".add-form-button");
-const addFormBox = document.querySelector(".add-form");
-const preloader = document.querySelector(".preloader");
+const container = document.querySelector(".container");
+const login = !localStorage.getItem("login")
+  ? {
+      login: "",
+      password: "",
+      token: "",
+      name: "",
+    }
+  : JSON.parse(localStorage.getItem("login"));
 
-// масив комментариев, тут хранятся все комментарии
-let arrComments = [];
+let display = "none";
 
+let isAuthorized = Boolean(localStorage.getItem("isAuthorized") === "true");
 
-buttonAdd.addEventListener("click", sendComment);
-inputName.addEventListener("keyup", (key) => {
-  if (key.code === "Enter") {
-    key.preventDefault();
-    inputText.focus();
+// ===== FUNCTIONS =====
+const renderApp = () => {
+  container.innerHTML = `
+  <img class="preloader" src="./image/preloader.gif" alt="preloader">
+  ${display === "none" ? `<ul class="comments"></ul>` : ""}
+  ${
+    isAuthorized
+      ? `
+      <div class="add-form">
+        <div class="add-form-name">${login.name}</div>
+        <textarea
+          type="textarea"
+          class="add-form-text"
+          placeholder="Введите ваш комментарий"
+          rows="4"
+        ></textarea>
+        <div class="add-form-row">
+          <button class="add-form-button inactive">Написать</button>
+        </div>
+      </div>
+    `
+      : `  
+      <div class="tips-wrap">
+        <div>Чтобы добавить комментарий,</div>
+        <buttun class="tips-auth">авторизуйтесь</button>
+      </div>
+    `
   }
-});
-inputText.addEventListener("keydown", (key) => {
-  if (key.code === "Enter") {
-    // чтобы не срабатывал enter
-    key.preventDefault();
-    sendComment();
-  }
-});
-inputText.addEventListener("input", switchButton);
-inputName.addEventListener("input", switchButton);
+  ${authComponent(login)}
+  `;
+};
 
 const getComments = () => {
   preloader.classList.add("--ON");
-  addFormBox.classList.remove("--ON");
-  getCommentsApi()
+  if (isAuthorized) {
+    addFormBox.classList.remove("--ON");
+  } else {
+    tipsWrap.classList.remove("--ON");
+  }
+  getCommentsApi(login)
     .then((data) => {
       arrComments = [...data.comments];
       renderComments();
-      getEvent();
+      isAuthorized && getEvent();
       preloader.classList.remove("--ON");
-      addFormBox.classList.add("--ON");
+      if (isAuthorized) {
+        addFormBox.classList.add("--ON");
+      } else {
+        tipsWrap.classList.add("--ON");
+      }
     })
     .catch(() => {
       alert("Упс, кажется что-то пошло не так...");
@@ -46,25 +74,18 @@ const getComments = () => {
     });
 };
 
-function sendComment() {
+const sendComment = () => {
   // проверка на пустые поля
-  if (
-    inputName.value.trim().length === 0 ||
-    inputText.value.trim().length === 0
-  ) {
-    return;
-  }
+  if (!inputText.value.trim().length) return;
 
   preloader.classList.add("--ON");
   addFormBox.classList.remove("--ON");
 
-  postCommentsApi()
+  postCommentsApi(inputText.value, login.token)
     .then((data) => {
       if (data.result === "ok") {
         getComments();
-        inputName.value = "";
         inputText.value = "";
-
         switchButton();
       }
     })
@@ -77,51 +98,248 @@ function sendComment() {
         preloader.classList.remove("--ON");
         addFormBox.classList.add("--ON");
       } else {
-        // мне кажется сюда стоит добавить количество попыток, чтобы глубоко не уходить в рекурсию
         sendComment();
       }
     });
-}
-
-// форматирование даты
-const getDate = (date) => {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear().toString().slice(-2);
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-
-  return `${day}.${month}.${year} ${hours}:${minutes}`;
 };
 
-function switchButton() {
-  // Проверка на > 3 так как в другом случае api даст ошибку
-  if (
-    inputName.value.trim().length !== 0 &&
-    inputText.value.trim().length !== 0
-  ) {
+const switchButton = () => {
+  if (inputText.value.trim().length) {
     buttonAdd.classList.add("active");
     buttonAdd.classList.remove("inactive");
   } else {
     buttonAdd.classList.add("inactive");
     buttonAdd.classList.remove("active");
   }
-}
+};
 
-// Пока у меня нет доступа к изменению или удалению, удаление не работает
+const switchButtonAuth = () => {
+  const authLogin = document.querySelector(".auth-login");
+  const authPass = document.querySelector(".auth-pass");
+  const btnAuth = document.querySelector(".auth-login-btn");
 
-// document.querySelector(".del-last-comment").addEventListener("click", () => {
-//   const indexLast = comments.innerHTML.lastIndexOf('<li class="comment">');
-//   comments.innerHTML = comments.innerHTML.slice(0, indexLast);
+  document.querySelector('.-error').classList.remove('--ON');
 
-//   // так же удаляем из массива, чтобы не было ошибок при рендере
-//   arrComments.pop();
+  if (authLogin.value.length && authPass.value.length) {
+    btnAuth.classList.add("active");
+    btnAuth.classList.remove("inactive");
+  } else {
+    btnAuth.classList.add("inactive");
+    btnAuth.classList.remove("active");
+  }
+};
 
-//   // Заново накидываем ивенты, они почему-то сбрасываются
-//   getEvent();
-// });
+const switchButtonReg = () => {
+  const authName = document.querySelector(".auth-name");
+  const authLogin = document.querySelector(".auth-login");
+  const authPass = document.querySelector(".auth-pass");
+  const btnAuth = document.querySelector(".auth-login-btn");
 
-// start
+  document.querySelector('.-error').classList.remove('--ON');
+
+  if (
+    authLogin.value.length &&
+    authPass.value.length &&
+    authName.value.length
+  ) {
+    btnAuth.classList.add("active");
+    btnAuth.classList.remove("inactive");
+  } else {
+    btnAuth.classList.add("inactive");
+    btnAuth.classList.remove("active");
+  }
+};
+
+const applicationLogin = () => {
+  const authLogin = document.querySelector(".auth-login").value;
+  const authPass = document.querySelector(".auth-pass").value;
+
+  // Валидация
+  if (!authLogin.length || !authPass.length) return;
+
+  login.login = authLogin;
+  login.password = authPass;
+
+  loginApi(login)
+    .then((data) => {
+      login.name = data.user.name;
+      login.token = data.user.token;
+      setDisplay("none");
+      setAuthorized(true);
+      localStorage.setItem("login", JSON.stringify(login));
+    })
+    .catch((error) => {
+      if (error.message === "400") {
+        const error = document.querySelector('.-error');
+        error.classList.add('--ON');
+        error.innerHTML = "Неправильный логин или пароль";
+      } else {
+        alert("Упс, кажется что-то пошло не так...");
+      }
+    });
+};
+
+const applicationRegister = () => {
+  const authLogin = document.querySelector(".auth-login").value;
+  const authPass = document.querySelector(".auth-pass").value;
+  const authName = document.querySelector(".auth-name").value;
+
+  // Валидация
+  if (!authLogin.length || !authPass.length || !authName.length) return;
+
+  login.name = authName;
+  login.login = authLogin;
+  login.password = authPass;
+
+  registerApi(login)
+    .then((data) => {
+      login.login = data.user.login;
+      login.password = data.user.password;
+      login.name = data.user.name;
+      login.token = data.user.token;
+      setDisplay("none");
+      setAuthorized(true);
+      localStorage.setItem("login", JSON.stringify(login));
+    })
+    .catch((error) => {
+      if (error.message === "400") {
+        const error = document.querySelector('.-error');
+        error.classList.add('--ON');
+        error.innerHTML = "Такой пользователь уже есть в базе";
+      } else {
+        alert("Упс, кажется что-то пошло не так...");
+      }
+    });
+};
+
+const logout = () => {
+  login.login = "";
+  login.password = "";
+  login.token = "";
+  login.name = "";
+  localStorage.setItem("login", JSON.stringify(login));
+  setAuthorized(false);
+};
+
+const getElementAndEvent = () => {
+  if (isAuthorized) {
+    inputText = document.querySelector(".add-form-text");
+    buttonAdd = document.querySelector(".add-form-button");
+    addFormBox = document.querySelector(".add-form");
+
+    buttonAdd.addEventListener("click", sendComment);
+    inputText.addEventListener("keydown", (key) => {
+      if (key.code === "Enter") {
+        // чтобы не срабатывал enter
+        key.preventDefault();
+        sendComment();
+      }
+    });
+    inputText.addEventListener("input", switchButton);
+
+    document.querySelector(".logout").addEventListener("click", () => {
+      logout();
+    });
+  } else {
+    tipsWrap = document.querySelector(".tips-wrap");
+
+    document
+      .querySelector(".auth-btn-login")
+      .addEventListener("click", () => setDisplay("login"));
+    document
+      .querySelector(".auth-btn-register")
+      .addEventListener("click", () => setDisplay("registration"));
+    document
+      .querySelector(".tips-auth")
+      .addEventListener("click", () => setDisplay("login"));
+
+    if (display !== "none") {
+      document
+        .querySelector(".auth-switch")
+        .addEventListener("click", () =>
+          setDisplay(`${display === "login" ? "registration" : "login"}`)
+        );
+      const authLogin = document.querySelector(".auth-login");
+      const authPass = document.querySelector(".auth-pass");
+      const authLoginBtn = document.querySelector(".auth-login-btn");
+      authLogin.addEventListener("keydown", (key) => {
+        if (key.code === "Enter") {
+          key.preventDefault();
+          authPass.focus();
+        }
+      });
+      if (display === "login") {
+        authLoginBtn.addEventListener("click", () => {
+          applicationLogin();
+        });
+
+        authPass.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            applicationLogin();
+          }
+        });
+
+        // Смена цвета кнопки входа
+        authLogin.addEventListener("input", switchButtonAuth);
+        authPass.addEventListener("input", switchButtonAuth);
+      }
+      if (display === "registration") {
+        const authName = document.querySelector(".auth-name");
+        authName.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            authLogin.focus();
+          }
+        });
+        authLoginBtn.addEventListener("click", () => {
+          applicationRegister();
+        });
+
+        authPass.addEventListener("keydown", (key) => {
+          if (key.code === "Enter") {
+            key.preventDefault();
+            applicationRegister();
+          }
+        });
+        // Смена цвета кнопки регистрации
+        authName.addEventListener("input", switchButtonReg);
+        authLogin.addEventListener("input", switchButtonReg);
+        authPass.addEventListener("input", switchButtonReg);
+      }
+    }
+  }
+};
+
+const setDisplay = (status) => {
+  display = status;
+  renderApp();
+  getElementAndEvent();
+};
+
+const setAuthorized = (status) => {
+  isAuthorized = status;
+  localStorage.setItem("isAuthorized", status.toString());
+  renderApp();
+  getElementAndEvent();
+  getComments();
+};
+
+// ====== START =====
+renderApp();
+const preloader = document.querySelector(".preloader");
+
+// получение статичных элементов и эвентов для них
+let addFormBox = null;
+let tipsWrap = null;
+let inputText = null;
+let buttonAdd = null;
+getElementAndEvent();
+
+// масив комментариев, тут хранятся все комментарии
+let arrComments = [];
+
 getComments();
 
-export { getDate, getEvent, arrComments };
+export { arrComments, display, isAuthorized };
+
